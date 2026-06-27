@@ -30,6 +30,9 @@
 #include "../SDL_hints_c.h"
 #include "SDL_steam_virtual_gamepad.h"
 
+// Nucleus Co-Op INI headr
+#include "../nucleus/SDL_ini.h"
+
 #ifndef SDL_EVENTS_DISABLED
 #include "../events/SDL_events_c.h"
 #endif
@@ -628,6 +631,14 @@ int SDL_JoystickInit(void)
 
     SDL_joysticks_initialized = SDL_TRUE;
 
+    // Nucleus Co-Op changes:
+    // Permanently prevent A/B and X/Y swap on Nintendo controllers
+    SDL_SetHintWithPriority(SDL_HINT_GAMECONTROLLER_USE_BUTTON_LABELS, "0", SDL_HINT_OVERRIDE);
+
+    // Permanently force background events so unfocused windows still receive input
+    SDL_SetHintWithPriority(SDL_HINT_JOYSTICK_ALLOW_BACKGROUND_EVENTS, "1", SDL_HINT_OVERRIDE);
+    // --- End of Nucleus Co-Op changes
+
     SDL_GameControllerInitMappings();
 
     SDL_LoadVIDPIDList(&arcadestick_devices);
@@ -706,12 +717,26 @@ const char *SDL_JoystickNameForIndex(int device_index)
     const SDL_SteamVirtualGamepadInfo *info;
 
     SDL_LockJoysticks();
-    info = SDL_GetJoystickInstanceVirtualGamepadInfo(SDL_JoystickGetDeviceInstanceID(device_index));
-    if (info) {
-        name = info->name;
-    } else if (SDL_GetDriverAndJoystickIndex(device_index, &driver, &device_index)) {
-        name = driver->GetDeviceName(device_index);
+
+    // Nucleus Co-Op changes:
+    // Restructured to check the INI barricade before returning the hardware name.
+    if (SDL_GetDriverAndJoystickIndex(device_index, &driver, &device_index)) {
+
+        SDL_JoystickID instance_id = driver->GetDeviceInstanceID(device_index);
+
+        // Only fetch the name if the controller is NOT blocked (-1)
+        if (SDL_GetPlayerIndexFromINI(instance_id) != -1) {
+            info = SDL_GetJoystickInstanceVirtualGamepadInfo(instance_id);
+            if (info) {
+                name = info->name;
+            } else {
+                name = driver->GetDeviceName(device_index);
+            }
+        }
+        // If it IS blocked, 'name' safely remains NULL!
     }
+    // --- End of Nucleus Co-Op changes
+
     SDL_UnlockJoysticks();
 
     /* FIXME: Really we should reference count this name so it doesn't go away after unlock */
@@ -804,6 +829,15 @@ SDL_Joystick *SDL_JoystickOpen(int device_index)
      * it is important that we have a single joystick * for each instance id
      */
     instance_id = driver->GetDeviceInstanceID(device_index);
+
+    // Nucleus Co-Op changes:
+    // Prevent opening joysticks that are explicitly blocked by the INI
+    if (SDL_GetPlayerIndexFromINI(instance_id) == -1) {
+        SDL_UnlockJoysticks();
+        return NULL;
+    }
+    // --- End of Nucleus Co-Op changes
+
     while (joysticklist) {
         if (instance_id == joysticklist->instance_id) {
             joystick = joysticklist;
@@ -1774,6 +1808,19 @@ void SDL_PrivateJoystickAdded(SDL_JoystickID device_instance)
             player_index = driver->GetDevicePlayerIndex(driver_device_index);
         }
     }
+
+    // Nucleus Co-Op changes:
+    // Filter hot-plugged joysticks based on the INI file
+    int ini_index = SDL_GetPlayerIndexFromINI(device_instance);
+    if (ini_index == -1) {
+        // Drop the event completely, making it invisible to the game
+        return;
+    } else if (ini_index != -2) {
+        // Force explicit player index from INI
+        player_index = ini_index;
+    }
+    // --- End of Nucleus Co-Op changes
+
     if (player_index < 0 && SDL_IsGameController(device_index)) {
         player_index = SDL_FindFreePlayerIndex();
     }
@@ -3021,7 +3068,15 @@ SDL_JoystickGUID SDL_JoystickGetDeviceGUID(int device_index)
 
     SDL_LockJoysticks();
     if (SDL_GetDriverAndJoystickIndex(device_index, &driver, &device_index)) {
-        guid = driver->GetDeviceGUID(device_index);
+        // Nucleus Co-Op changes:
+        // Hide blocked controllers by returning an empty GUID (tricks SDL_IsGameController)
+        SDL_JoystickID instance_id = driver->GetDeviceInstanceID(device_index);
+        if (SDL_GetPlayerIndexFromINI(instance_id) == -1) {
+            SDL_zero(guid);
+        } else {
+            guid = driver->GetDeviceGUID(device_index);
+        }
+        // --- End of Nucleus Co-Op changes
     } else {
         SDL_zero(guid);
     }
@@ -3099,6 +3154,13 @@ SDL_JoystickID SDL_JoystickGetDeviceInstanceID(int device_index)
     SDL_LockJoysticks();
     if (SDL_GetDriverAndJoystickIndex(device_index, &driver, &device_index)) {
         instance_id = driver->GetDeviceInstanceID(device_index);
+
+        // Nucleus Co-Op changes:
+        // Hide the Instance ID for blocked controllers
+        if (SDL_GetPlayerIndexFromINI(instance_id) == -1) {
+            instance_id = -1;
+        }
+        // --- End of Nucleus Co-Op changes
     }
     SDL_UnlockJoysticks();
 
