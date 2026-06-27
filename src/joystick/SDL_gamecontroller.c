@@ -1929,6 +1929,14 @@ int SDL_GameControllerInitMappings(void)
     /* load in any user supplied config */
     SDL_GameControllerLoadHints();
 
+    // Nucleus Co-Op changes:
+    // Automatically load the external mapping database if present in the working directory.
+    // Suppress error reporting to prevent engine panics if the file is absent.
+    if (SDL_GameControllerAddMappingsFromFile("gamecontrollerdb.txt") < 0) {
+        SDL_ClearError();
+    }
+    // --- End of Nucleus Co-Op changes
+
     SDL_LoadVIDPIDList(&SDL_allowed_controllers);
     SDL_LoadVIDPIDList(&SDL_ignored_controllers);
 
