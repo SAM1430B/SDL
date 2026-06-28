@@ -268,6 +268,9 @@
     <Filter Include="notification\windows">
       <UniqueIdentifier>{0000b6590eb19c11945581d0479b0000}</UniqueIdentifier>
     </Filter>
+    <Filter Include="nucleus">
+      <UniqueIdentifier>{302359a1-9580-4e9a-a2bb-068a06c4fc53}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\include\SDL3\SDL.h">
@@ -1345,6 +1348,9 @@
     <ClInclude Include="..\..\src\render\gpu\shaders\tri_texture.vert.msl.h">
       <Filter>render\gpu\shaders</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\nucleus\SDL_ini.h">
+      <Filter>nucleus</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\audio\wasapi\SDL_wasapi.c" />
@@ -2077,6 +2083,9 @@
     </ClCompile>
     <ClCompile Include="..\..\src\video\yuv2rgb\yuv_rgb_std.c">
       <Filter>video\yuv2rgb</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\nucleus\SDL_ini.c">
+      <Filter>nucleus</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

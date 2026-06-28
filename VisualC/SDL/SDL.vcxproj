@@ -524,6 +524,7 @@
     <ClInclude Include="..\..\src\misc\SDL_libusb.h" />
     <ClInclude Include="..\..\src\misc\SDL_sysurl.h" />
     <ClInclude Include="..\..\src\notification\SDL_notification_c.h" />
+    <ClInclude Include="..\..\src\nucleus\SDL_ini.h" />
     <ClInclude Include="..\..\src\power\SDL_syspower.h" />
     <ClInclude Include="..\..\src\process\SDL_sysprocess.h" />
     <ClInclude Include="..\..\src\render\direct3d11\D3D11_PixelShader_Advanced.h" />
@@ -644,6 +645,7 @@
     <ClCompile Include="..\..\src\main\windows\SDL_sysmain_runapp.c" />
     <ClCompile Include="..\..\src\notification\SDL_notification.c" />
     <ClCompile Include="..\..\src\notification\windows\SDL_windowsnotification.c" />
+    <ClCompile Include="..\..\src\nucleus\SDL_ini.c" />
     <ClCompile Include="..\..\src\render\vulkan\SDL_render_vulkan.c" />
     <ClCompile Include="..\..\src\render\vulkan\SDL_shaders_vulkan.c" />
     <ClCompile Include="..\..\src\SDL_guid.c" />
