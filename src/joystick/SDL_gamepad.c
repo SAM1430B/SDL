@@ -3020,6 +3020,13 @@ bool SDL_InitGamepadMappings(void)
     // load in any user supplied config
     SDL_LoadGamepadHints();
 
+    // Nucleus Co-Op changes:
+    // Automatically load the external mapping database if present in the working directory.
+    if (SDL_AddGamepadMappingsFromFile("gamecontrollerdb.txt") < 0) {
+        SDL_ClearError(); // Suppress missing-file warning to prevent engine panic
+    }
+    // --- End of Nucleus Co-Op changes
+
     SDL_LoadVIDPIDList(&SDL_allowed_gamepads);
     SDL_LoadVIDPIDList(&SDL_ignored_gamepads);
 
